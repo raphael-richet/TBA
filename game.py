@@ -6,6 +6,7 @@ from room import Room
 from player import Player
 from command import Command
 from actions import Actions
+from item import Item
 
 class Game:
 
@@ -32,6 +33,14 @@ class Game:
         self.commands["back"] = back
         history = Command("history", " : afficher l'historique des pièces visitées", Actions.history, 0)
         self.commands["history"] = history
+        look = Command("look", " : observer l'environnement", Actions.look, 0)
+        self.commands["look"] = look
+        take = Command("take", " <objet> : prendre un objet", Actions.take, 1)
+        self.commands["take"] = take
+        drop = Command("drop", " <objet> : déposer un objet", Actions.drop, 1)
+        self.commands["drop"] = drop
+        check = Command("check", " : vérifier l'inventaire", Actions.check, 0)
+        self.commands["check"] = check
         
         # Setup rooms
 
@@ -91,6 +100,25 @@ class Game:
         self.player = Player(input("\nEntrez votre nom: "))
         self.player.current_room = Maison_crime
         self.player.history.append(self.player.current_room)
+
+        # Setup items in rooms
+        sword = Item("sword", "une épée au fil tranchant comme un rasoir", 2)
+        Maison_crime.inventory["sword"] = sword
+
+        shield = Item("shield", "un bouclier léger et résistant", 1)
+        Durand.inventory["shield"] = shield
+
+        helmet = Item("helmet", "un casque en métal", 1)
+        Lenoir.inventory["helmet"] = helmet
+
+        key = Item("key", "une clé suspecte", 1)
+        Cave.inventory["key"] = key
+
+        torch = Item("torch", "une torche en bois et tissu", 1)
+        Grenier.inventory["torch"] = torch
+
+        coin = Item("coin", "une pièce de monnaie ancienne", 0)
+        Jardin.inventory["coin"] = coin
 
     # Play the game
     def play(self):
