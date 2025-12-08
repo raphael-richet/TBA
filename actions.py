@@ -42,8 +42,8 @@ class Actions:
         False
         >>> go(game, ["go"], 1)
         False
-
         """
+        
         
         player = game.player
         l = len(list_of_words)
@@ -53,58 +53,12 @@ class Actions:
             print(MSG1.format(command_word=command_word))
             return False
 
-        # Get the raw direction from the list of words.
-        raw_direction = list_of_words[1]
-        direction_key = raw_direction.lower()
-
-        # Dictionnaire de synonymes -> direction canonique
-        direction_aliases = {
-            "n": "N",
-            "nord": "N",
-
-            "s": "S",
-            "sud": "S",
-
-            "e": "E",
-            "est": "E",
-
-            "o": "O",
-            "ouest": "O",
-
-            "u": "U",
-            "up": "U",
-            "haut": "U",
-
-            "d": "D",
-            "down": "D",
-            "bas": "D",
-        }
-
-        # Vérifier si la direction entrée est reconnue (synonyme ou lettre)
-        if direction_key not in direction_aliases:
-            print(f"\nDirection '{raw_direction}' non reconnue.\n")
-            # On réaffiche la salle actuelle
-            print(player.current_room.get_long_description())
-            return False
-
-        # Direction canonique (N, E, S, O, U, D)
-        direction = direction_aliases[direction_key]
-
-        # Construire automatiquement l'ensemble des directions utilisées dans la map
-        valid_directions = set()
-        for room in game.rooms:
-            valid_directions.update(room.exits.keys())
-
-        # Si la direction canonique n'existe dans aucune salle de la map,
-        # on la considère comme non reconnue.
-        if direction not in valid_directions:
-            print(f"\nDirection '{raw_direction}' non reconnue.\n")
-            print(player.current_room.get_long_description())
-            return False
-
+        # Get the direction from the list of words.
+        direction = list_of_words[1]
         # Move the player in the direction specified by the parameter.
         player.move(direction)
         return True
+
 
 
     def quit(game, list_of_words, number_of_parameters):
@@ -185,3 +139,72 @@ class Actions:
             print("\t- " + str(command))
         print()
         return True
+
+    def back(game, list_of_words, number_of_parameters):
+        """
+        Go back to the previous room.
+
+        Args:
+            game (Game): The game object.
+            list_of_words (list): The list of words in the command.
+            number_of_parameters (int): The number of parameters expected by the command.
+
+        Returns:
+            bool: True if the command was executed successfully, False otherwise.
+        """
+        l = len(list_of_words)
+        if l != number_of_parameters + 1:
+            command_word = list_of_words[0]
+            print(MSG0.format(command_word=command_word))
+            return False
+        
+        player = game.player
+        if len(player.history) > 1:
+            player.history.pop()
+            player.current_room = player.history[-1]
+            print(player.current_room.get_long_description())
+            print(Actions.get_history(player))
+            return True
+        else:
+            print("\nVous ne pouvez pas revenir plus loin.\n")
+            return False
+
+    def history(game, list_of_words, number_of_parameters):
+        """
+        Display the history of visited rooms.
+
+        Args:
+            game (Game): The game object.
+            list_of_words (list): The list of words in the command.
+            number_of_parameters (int): The number of parameters expected by the command.
+
+        Returns:
+            bool: True if the command was executed successfully, False otherwise.
+        """
+        l = len(list_of_words)
+        if l != number_of_parameters + 1:
+            command_word = list_of_words[0]
+            print(MSG0.format(command_word=command_word))
+            return False
+        
+        player = game.player
+        print(Actions.get_history(player))
+        return True
+
+    def get_history(player):
+        """
+        Get the history of visited rooms as a formatted string.
+
+        Args:
+            player (Player): The player object.
+
+        Returns:
+            str: The formatted history string.
+        """
+        if len(player.history) <= 1:
+            return "\nVous n'avez visité aucune pièce précédemment.\n"
+        result = "\nVous avez déja visité les pièces suivantes:\n"
+        for room in player.history[:-1]:
+            result += f"    - {room.description}\n"
+        result += "\n"
+        return result

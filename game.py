@@ -15,6 +15,7 @@ class Game:
         self.rooms = []
         self.commands = {}
         self.player = None
+        self.history = []
     
     # Setup the game
     def setup(self):
@@ -27,6 +28,10 @@ class Game:
         self.commands["quit"] = quit
         go = Command("go", " <direction> : se déplacer dans une direction cardinale (N, E, S, O)", Actions.go, 1)
         self.commands["go"] = go
+        back = Command("back", " : revenir à la pièce précédente", Actions.back, 0)
+        self.commands["back"] = back
+        history = Command("history", " : afficher l'historique des pièces visitées", Actions.history, 0)
+        self.commands["history"] = history
         
         # Setup rooms
 
@@ -85,6 +90,7 @@ class Game:
 
         self.player = Player(input("\nEntrez votre nom: "))
         self.player.current_room = Maison_crime
+        self.player.history.append(self.player.current_room)
 
     # Play the game
     def play(self):
@@ -104,9 +110,11 @@ class Game:
 
         command_word = list_of_words[0]
 
+        if command_string.strip() == "":
+            return
         # If the command is not recognized, print an error message
-        if command_word == "" :
-            print("")
+        if command_word not in self.commands.keys():
+            print(f"\nCommande non reconnue. Tapez 'help' pour voir la liste des commandes disponibles.\n")
         # If the command is recognized, execute it
         else:
             command = self.commands[command_word]
@@ -116,6 +124,8 @@ class Game:
     def print_welcome(self):     
         print(f"\nBienvenue {self.player.name} dans Crime à Montfleur !")
         print("Entrez 'help' si vous avez besoin d'aide.\n")
+        print(self.player.current_room.get_long_description())
+
  
     # Scénario d’introduction
         print("Une nuit sombre vient de tomber sur Montfleur...")
