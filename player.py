@@ -1,24 +1,24 @@
-# Définir la classe Player.
+# Define the Player class.
 class Player():
 
-    # Définir le constructeur.
+    # Define the constructor.
     def __init__(self, name):
         self.name = name
         self.current_room = None
         self.history = []
         self.inventory = {}
     
-    # Définir la méthode move.
+    # Define the move method.
     def move(self, direction):
-        # Obtenir la pièce suivante à partir du dictionnaire exits de la pièce actuelle.
+        # Get the next room from the exits dictionary of the current room.
         next_room = self.current_room.exits.get(direction, None)
 
-        # Si la pièce suivante est None, afficher un message d'erreur et retourner False.
+        # If the next room is None, display an error message and return False.
         if next_room is None:
             print("\nAucune porte dans cette direction !\n")
             return False
         
-        # Définir la pièce actuelle à la pièce suivante.
+        # Set the current room to the next room.
         self.current_room = next_room
         self.history.append(self.current_room)
         print(self.current_room.get_long_description())
@@ -26,10 +26,10 @@ class Player():
 
     def get_inventory(self):
         """
-        Retourne une chaîne représentant l'inventaire du joueur.
+        Return a string representing the player's inventory.
         
-        Retourne:
-            str: La chaîne représentant l'inventaire
+        Returns:
+            str: The string representing the inventory
         """
         if len(self.inventory) == 0:
             return "\nVotre inventaire est vide.\n"

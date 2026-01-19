@@ -1,23 +1,23 @@
-# Description: Classe Item
+# Description: Item class
 
 class Item:
     """
-    Classe pour représenter un objet qui peut être trouvé dans les pièces.
+    Class to represent an object that can be found in rooms.
     
-    Attributs:
-        name (str): Le nom de l'objet
-        description (str): La description de l'objet
-        weight (int): Le poids de l'objet en kg
+    Attributes:
+        name (str): The name of the object
+        description (str): The description of the object
+        weight (int): The weight of the object in kg
     """
     
     def __init__(self, name, description, weight):
         """
-        Initialise un Item.
+        Initialize an Item.
         
-        Paramètres:
-            name (str): Le nom de l'objet
-            description (str): La description de l'objet
-            weight (int): Le poids de l'objet en kg
+        Parameters:
+            name (str): The name of the object
+            description (str): The description of the object
+            weight (int): The weight of the object in kg
         """
         self.name = name
         self.description = description
@@ -25,13 +25,13 @@ class Item:
     
     def __str__(self):
         """
-        Retourne une représentation textuelle de l'objet.
+        Return a textual representation of the object.
         
-        Retourne:
-            str: Une chaîne formatée avec le nom, la description et le poids
+        Returns:
+            str: A formatted string with the name, description, and weight
             
-        Exemple:
-            sword : une épée au fil tranchant comme un rasoir (2 kg)
+        Example:
+            sword : a sword with a razor-sharp edge (2 kg)
         """
         if self.weight == 0:
             return f"{self.name} : {self.description}"
