@@ -106,7 +106,7 @@ class Quest:
 
     def complete_quest(self, player=None):
         """
-        Mark the quest as completed and display reward message.
+        Mark the quest as completed and display reward message with clues.
         
         Args:
             player: The player object (optional).
@@ -125,11 +125,21 @@ class Quest:
         """
         if not self.is_completed:
             self.is_completed = True
-            print(f"\n\033[92mQuête terminée: {self.title}\033[0m")
+            print(f"\n\033[92m{'='*60}")
+            print(f"✅ Quête terminée: {self.title}")
+            print(f"{'='*60}\033[0m")
             
-            # Display reward message based on quest title
+            # Display reward/clue message
+            if self.reward:
+                print(f"\n💡 INDICE REÇU: {self.reward}\n")
+            
+            # Display specific messages based on quest title
             if self.title == "Résoudre l'énigme":
                 print("Bravo, vous avez résolu l'enquête !")
+            elif self.title == "Ouvrir le coffre":
+                print("Vous avez découvert des secrets importants!")
+            elif self.title == "Lire la lettre mystérieuse":
+                print("La lettre révèle des informations cruciales!")
             else:
                 print("Excellent, votre enquête avance ! Continuez !")
             print()

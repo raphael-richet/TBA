@@ -38,14 +38,16 @@ class Game:
         self.displacement_count = 0
         # Analyzed items
         self.analyzed_items = set()
-        # Items to analyze: key, photos, chest, knife, weapon, letter
-        self.required_items = {"key", "photos", "chest", "knife", "weapon", "letter"}
+        # Items to analyze: clé, photos, coffre, couteau, arme, lettre
+        self.required_items = {"clé", "photos", "coffre", "couteau", "arme", "lettre"}
         # Accused person
         self.accused = None
         # Track visited crime scene rooms for Quest 1
         self.visited_crime_scene_rooms = set()
         # Track collected items for Quest 1
         self.collected_items = set()
+        # Flags for quest rewards and special events
+        self.flags = set()
     
     # Game setup
     def setup(self):
@@ -71,6 +73,10 @@ class Game:
         self.commands["check"] = check
         talk = Command("talk", " <name> : parler à un personnage", Actions.talk, 1)
         self.commands["talk"] = talk
+        examine = Command("examine", " <objet> : examiner un objet (indice)", Actions.examine, 1)
+        self.commands["examine"] = examine
+        use = Command("use", " <objet1> on <objet2> : utiliser un objet sur un autre", Actions.use, 1)
+        self.commands["use"] = use
         accuse = Command("accuse", " <name> : accuser un personnage du crime", Actions.accuse, 1)
         self.commands["accuse"] = accuse
         analyze = Command("analyze", " <item> : analyser un objet au labo", Actions.analyze, 1)
@@ -124,7 +130,7 @@ class Game:
         # Création des sorties entre salles
         Rue_Montfleur.exits = {"E": Maison_crime, "N": Durand, "S": Lenoir, "O": Café}
         Maison_crime.exits = {"O": Rue_Montfleur, "U": Grenier, "D": Cave, "E": Jardin}
-        Durand.exits = {"S": Rue_Montfleur, "O": Café}
+        Durand.exits = {"S": Rue_Montfleur}
         Lenoir.exits = {"N": Rue_Montfleur, "S": Parc}
         Café.exits = {"E": Rue_Montfleur, "N": Commissariat}
         Commissariat.exits = {"S": Café, "E": Morgue, "O": Labo}
@@ -151,7 +157,7 @@ class Game:
 
         quest2 = Quest("Faire analyser les objets au Labo",
                       "Faire analyser les objets trouvés à la maison du crime au Labo du commissariat",
-                      ["Accéder au Labo du commissariat", "Parler au scientifique", "Faire analyser chaque objet"],
+                      ["Accéder au Labo du commissariat", "Parler au Chimiste", "Faire analyser chaque objet"],
                       "Résultats d'analyse importants")
         self.quest_manager.add_quest(quest2)
 
@@ -205,27 +211,27 @@ class Game:
         self.quest_manager.add_quest(quest10)
 
         # Add objects to rooms (conforming to descriptions)
-        knife = Item("knife", "un couteau ensanglanté", 0.5)
-        Maison_crime.inventory["knife"] = knife
+        couteau = Item("couteau", "un couteau ensanglanté", 0.5)
+        Maison_crime.inventory["couteau"] = couteau
 
-        key = Item("key", "une clé suspecte", 0.2)
-        Durand.inventory["key"] = key
+        clé = Item("clé", "une clé suspecte", 0.2)
+        Durand.inventory["clé"] = clé
 
-        letter = Item("letter", "une lettre mystérieuse", 0.001)
-        Lenoir.inventory["letter"] = letter
+        lettre = Item("lettre", "une lettre mystérieuse", 0.001)
+        Lenoir.inventory["lettre"] = lettre
 
-        chest = Item("chest", "un coffre verrouillé", 5)
-        Cave.inventory["chest"] = chest
+        coffre = Item("coffre", "un coffre verrouillé", 5)
+        Cave.inventory["coffre"] = coffre
 
         photos = Item("photos", "des vieilles photos", 0.5)
         Grenier.inventory["photos"] = photos
 
-        weapon = Item("weapon", "une arme dissimulée", 3)
-        Jardin.inventory["weapon"] = weapon
+        arme = Item("arme", "une arme dissimulée", 3)
+        Jardin.inventory["arme"] = arme
 
         # Add useless clues
-        city_book = Item("city_book", "un livre décrivant l'histoire de la ville", 0.8)
-        Bibliotheque.inventory["city_book"] = city_book
+        livre_ville = Item("livre_ville", "un livre décrivant l'histoire de la ville", 0)
+        Bibliotheque.inventory["livre_ville"] = livre_ville
 
         # Setup characters (NPCs)
         durand_pnj = character.Character("Durand", "un voisin nerveux", Durand,
@@ -239,30 +245,33 @@ class Game:
         Lenoir.characters["Lenoir"] = lenoir_pnj
 
         policier = character.Character("Policier", "un enquêteur du commissariat", Commissariat,
-                             ["Apportez-moi des preuves.", "Vous devez analyser ces 6 objets: clé, photos, coffre, couteau, arme, lettre.", "Les indices pointent vers Durand - accusez-le quand vous serez sur!", "La vérité finira par éclater."])
+                             ["Apportez-moi des preuves.", "Vous devez analyser ces 6 objets: clé, photos, coffre, couteau, arme, lettre.", "Une fois tous les objets analyses, vous pourrez identifier le coupable.", "La verite finira par eclater."])
         Commissariat.characters["Policier"] = policier
 
         # NPC at the morgue: medical examiner providing analysis and autopsies
         medecin_legiste = character.Character("Médecin légiste", "un médecin légiste studieux", Morgue,
                                [
-                                "Rapport préliminaire: sur la scène du crime j'ai observé une blessure pénétrante, du sang et un couteau trouvé sur place (voir 'knife' dans la Maison du crime).",
+                                "Rapport préliminaire: sur la scène du crime j'ai observé une blessure pénétrante, du sang et un couteau trouvé sur place (voir 'couteau' dans la Maison du crime).",
                                 "Autopsie: la cause du décès semble être une plaie thoracique. L'angle et la profondeur indiquent une attaque rapprochée; peu de signes de défense.",
-                                "ELEMENTS A ANALYSER (6 OBJETS): clé ('key'), photos ('photos'), coffre ('chest'), couteau ('knife'), arme ('weapon'), lettre ('letter'). Tous ces objets doivent être apportés au laboratoire pour analyse complète.",
-                                "Analyse circonstancielle: Durand s'est montré nerveux et s'est déplacé - il a quitté 'Maison de Durand' et est allé à 'Rue de Montfleur'. Lenoir a entendu un bruit, et le Policier centralise les preuves. Durand est notre suspect principal.",
-                                "COUPABLE PROBABLE: Durand! Voici pourquoi: nervosité suspecte, possession de la clé, et ses déplacements coïncident avec l'heure du crime. Les preuves l'incriminent fortement.",
-                                "Conclusion et recommandations: la victime a été attaquée sur place. Accusez Durand au commissariat une fois que vous aurez recueilli toutes les preuves."
+                                "ELEMENTS A ANALYSER (6 OBJETS): clé ('clé'), photos ('photos'), coffre ('coffre'), couteau ('couteau'), arme ('arme'), lettre ('lettre'). Tous ces objets doivent être apportés au laboratoire pour analyse complète.",
+                                "Analyse circonstancielle: Plusieurs suspects ont une nervosité suspecte et se sont déplacés. Lenoir a entendu un bruit. Les indices montrent plusieurs pistes.",
+                                "Les preuves physiques et les temoignages doivent etre analyses soigneusement pour identifier le vrai coupable.",
+                                "Conclusion: la victime a ete attaquee sur place. Analysez tous les 6 objets au commissariat pour en savoir plus."
                                ])
         Morgue.characters["Médecin légiste"] = medecin_legiste
 
         # NPC at the laboratory: scientist for analyzing evidence
-        scientifique = character.Character("Scientifique", "un scientifique du labo", Labo,
+        chimiste = character.Character("Chimiste", "un chimiste du labo", Labo,
                                [
-                                "Bienvenue au laboratoire. Vous devez analyser 6 objets essentiels: clé, photos, coffre, couteau, arme, et lettre.",
-                                "J'ai tous les équipements nécessaires pour tester ces preuves et révéler la vérité.",
-                                "Une fois tous les objets analysés, vous aurez suffisamment de preuves pour accuser le meurtrier.",
-                                "Les résultats montrent que Durand est impliqué - allez l'accuser au commissariat!"
+                                "Bienvenue au laboratoire! Vous devez analyser 6 objets essentiels: clé, photos, coffre, couteau, arme, et lettre.",
+                                "IMPORTANT: Vous n'avez pas besoin d'avoir tous les 6 objets en meme temps! Vous pouvez les analyser UN PAR UN.",
+                                "Assurez-vous que chaque objet est dans votre inventaire avant de l'analyser avec 'analyze <objet>'.",
+                                "Commande: analyze <objet> - et je confirmerai le resultat.",
+                                "J'ai tous les equipements necessaires pour tester ces preuves et reveler les indices.",
+                                "Une fois tous les objets analyses, les preuves vous permettront d'identifier le coupable.",
+                                "Allez interroger les suspects et deduisez qui a commis le crime!"
                                ])
-        Labo.characters["Scientifique"] = scientifique
+        Labo.characters["Chimiste"] = chimiste
 
     def win(self):
         """
@@ -314,7 +323,7 @@ class Game:
         Quest 1 is complete when player has visited all crime scene rooms and collected all items.
         """
         required_rooms = {"Grenier", "Maison du crime", "Cave", "Jardin"}
-        required_items = {"photos", "knife", "chest", "weapon"}
+        required_items = {"photos", "couteau", "coffre", "arme"}
         
         if self.visited_crime_scene_rooms == required_rooms and self.collected_items == required_items:
             quest1 = self.quest_manager.get_quest_by_title("Inspecter la maison du crime")
@@ -440,24 +449,50 @@ class Game:
 
     # Print the welcome message
     def print_welcome(self):     
-        print(f"\nBienvenue {self.player.name} dans Crime à Montfleur !")
+        print(f"\nBienvenue {self.player.name} dans Crime a Montfleur !")
         print("Entrez 'help' si vous avez besoin d'aide.\n")
 
     # Introduction scenario
         print("Une nuit sombre vient de tomber sur Montfleur...")
-        print("Un crime mystérieux a été commis dans une maison de la rue principale.")
-        print("Les voisins murmurent, les témoins hésitent, et les preuves semblent se cacher dans chaque recoin.")
-        print("Votre mission : explorer les lieux, interroger les habitants, et découvrir la vérité.\n")
+        print("Un crime mysterieux a ete commis dans une maison de la rue principale.")
+        print("Les voisins murmurent, les temoins hesitent, et les preuves semblent se cacher dans chaque recoin.")
+        print("Votre mission : explorer les lieux, interroger les habitants, et decouvrir la verite.\n")
         
         # Display time limit information
         print("="*60)
-        print("CONDITIONS DE L'ENQUÊTE")
+        print("CONDITIONS DE L'ENQUETE")
         print("="*60)
-        print("Temps disponible: 4 jours = 40 déplacements")
-        print("(Les déplacements dans le Grenier, Jardin, Cave et Labo ne comptent pas)")
+        print("Temps disponible: 4 jours = 40 deplacements")
+        print("(Les deplacements dans le Grenier, Jardin, Cave et Labo ne comptent pas)")
         print()
-        print("Tapez 'quests' pour voir vos quêtes et le temps restant")
+        print("Tapez 'quests' pour voir vos quetes et le temps restant")
         print("="*60 + "\n")
+        
+        # Display important gameplay instructions
+        print("="*60)
+        print("INSTRUCTIONS IMPORTANTES")
+        print("="*60)
+        print("\n1. COLLECTER LES OBJETS:")
+        print("   - Utilisez: take <objet>")
+        print("   - Les objets DOIVENT etre dans votre inventaire pour etre analyses")
+        print("   - Verifiez votre inventaire avec: check")
+        
+        print("\n2. ANALYSER LES OBJETS (UN PAR UN):")
+        print("   - Vous n'avez PAS besoin d'avoir les 6 objets en meme temps")
+        print("   - Prenez un objet, allez au Labo, puis: analyze <objet>")
+        print("   - Le Chimiste confirmera l'analyse")
+        print("   - Repetez pour chaque objet, un par un")
+        
+        print("\n3. OBTENIR LES RESULTATS:")
+        print("   - Apres avoir analyse chaque objet: talk Chimiste")
+        print("   - Une fois tous les 6 objets analyses: accuser le coupable")
+        
+        print("\n4. GAGNER LE JEU:")
+        print("   - Analyser et recuperer les resultats des 6 objets")
+        print("   - Decouvrir qui est le coupable")
+        print("   - L'accuser au Commissariat")
+        print("   - Tout faire en moins de 40 deplacements")
+        print("\n" + "="*60 + "\n")
  
     # Description of the starting room
         print(self.player.current_room.get_long_description())

@@ -137,7 +137,46 @@ class Actions:
         print("\nVoici les commandes disponibles:")
         for command in game.commands.values():
             print("\t- " + str(command))
-        print()
+        
+        print("\n" + "="*60)
+        print("CONSEILS IMPORTANTS")
+        print("="*60)
+        print("\n1. PRENDRE ET EXAMINER LES OBJETS:")
+        print("   - Commande: take <objet>")
+        print("   - Les objets doivent etre dans votre inventaire pour etre analyses")
+        print("   - Examinez les objets pour obtenir des indices: examine <objet>")
+        print("   - Verifiez votre inventaire avec 'check'")
+        
+        print("\n2. UTILISER LES OBJETS (Interagir):")
+        print("   - Commande: use <objet1> on <objet2>")
+        print("   - Exemple: use cle on coffre (ouvre le coffre avec la cle)")
+        print("   - Revele des indices importants et des secrets")
+        
+        print("\n3. ANALYSER LES OBJETS (Un par un):")
+        print("   - Allez au Labo du commissariat")
+        print("   - L'objet doit etre dans votre inventaire")
+        print("   - Commande: analyze <objet>")
+        print("   - Vous pouvez analyser les 6 objets UN PAR UN")
+        print("   - Pas besoin d'avoir tous les objets en meme temps")
+        print("   - Apres chaque analyse, parlez au Chimiste: talk Chimiste")
+        
+        print("\n4. QUETES ET RECOMPENSES:")
+        print("   - Commande: quests")
+        print("   - Chaque quete completee donne un INDICE comme recompense")
+        print("   - Les indices vous aident a resoudre l'enquete")
+        
+        print("\n5. OBJETS A ANALYSER (6 requis):")
+        print("   - couteau, cle, lettre, coffre, photos, arme")
+        
+        print("\n6. RESOUDRE L'ENQUETE:")
+        print("   - Collecter les 6 objets requis")
+        print("   - Examiner les objets pour obtenir des indices (examine <objet>)")
+        print("   - Analyser tous les 6 objets au Labo")
+        print("   - Parler au Chimiste APRES chaque analyse pour obtenir les resultats")
+        print("   - Interroger les suspects pour decouvrir le coupable")
+        print("   - Accuser le coupable au Commissariat")
+        print("   - Tout faire en moins de 40 deplacements")
+        print("="*60 + "\n")
         return True
 
     def back(game, list_of_words, number_of_parameters):
@@ -279,7 +318,7 @@ class Actions:
         print(f"\nVous avez pris l'objet '{item_name}'.\n")
         
         # Track items for Quest 1
-        if item_name in ["photos", "knife", "chest", "weapon"]:
+        if item_name in ["photos", "couteau", "coffre", "arme"]:
             game.collected_items.add(item_name)
             # Check if Quest 1 should be completed
             game.check_quest1_completion()
@@ -397,6 +436,110 @@ class Actions:
         print(character.get_msg())
         return True
 
+    def examine(game, list_of_words, number_of_parameters):
+        """
+        Allow the player to examine an item and get more details/clues.
+
+        Parameters:
+            game (Game): The game object.
+            list_of_words (list): The list of words from the command.
+            number_of_parameters (int): The number of expected parameters.
+
+        Returns:
+            bool: True if the command was executed successfully, False otherwise.
+        """
+        l = len(list_of_words)
+        if l != number_of_parameters + 1:
+            command_word = list_of_words[0]
+            print(MSG1.format(command_word=command_word))
+            return False
+
+        player = game.player
+        item_name = list_of_words[1]
+        
+        # Check if the item is in player's inventory
+        if item_name not in player.inventory:
+            print(f"\nVous n'avez pas l'objet '{item_name}' dans votre inventaire.\n")
+            return False
+        
+        # Item examinations with clues
+        examinations = {
+            "clé": "\n🔑 EXAMEN DE LA CLÉ:\nC'est une vieille clé en laiton. Elle semble ouvrir un coffre ou un meuble.\nIndice: Elle provient de la maison de Durand...\n",
+            "lettre": "\n📄 LECTURE DE LA LETTRE:\nVous lisez la lettre écrite par un ami de Lenoir.\nLe contenu révèle: 'Durand cache quelque chose de grave. Cherche dans son coffre!'\nIndice important: Durand a quelque chose à cacher!\n",
+            "couteau": "\n🔪 EXAMEN DU COUTEAU:\nUn couteau ensanglanté, arme probable du crime.\nIndice: Les empreintes peuvent révéler le coupable.\n",
+            "photos": "\n📷 EXAMEN DES PHOTOS:\nDes photos troublantes montrant Durand en mauvaise compagnie.\nIndice: Des preuves de sa culpabilité potentielle.\n",
+            "arme": "\n🔫 EXAMEN DE L'ARME:\nUne arme dissimulée. Problématique.\nIndice: Qui possédait cette arme?\n",
+            "coffre": "\n📦 EXAMEN DU COFFRE:\nUn coffre fermé à clé. La clé pourrait l'ouvrir!\nCommande: use clé on coffre\nIndice: Le contenu pourrait prouver la culpabilité.\n"
+        }
+        
+        if item_name in examinations:
+            print(examinations[item_name])
+        else:
+            print(f"\nVous examinez '{item_name}' mais ne trouvez rien d'intéressant.\n")
+        
+        return True
+
+    def use(game, list_of_words, number_of_parameters):
+        """
+        Allow the player to use one item on another (e.g., key on chest).
+
+        Parameters:
+            game (Game): The game object.
+            list_of_words (list): The list of words from the command.
+            number_of_parameters (int): The number of expected parameters (flexible).
+
+        Returns:
+            bool: True if the command was executed successfully, False otherwise.
+        """
+        l = len(list_of_words)
+        # We need at least 4 words: 'use', 'item1', 'on', 'item2'
+        if l < 4 or list_of_words[2].lower() != 'on':
+            print("\nUtilisation: use <objet1> on <objet2>\n")
+            return False
+
+        player = game.player
+        item1 = list_of_words[1]
+        item2 = list_of_words[3]
+        
+        # Check if both items are in player's inventory
+        if item1 not in player.inventory:
+            print(f"\nVous n'avez pas '{item1}' dans votre inventaire.\n")
+            return False
+        
+        if item2 not in player.inventory:
+            print(f"\nVous n'avez pas '{item2}' dans votre inventaire.\n")
+            return False
+        
+        # Use key on chest
+        if item1 == "clé" and item2 == "coffre":
+            if "clé_utilisée" not in game.flags:
+                game.flags.add("clé_utilisée")
+                print("\n🔑 Vous utilisez la clé sur le coffre.")
+                print("Le coffre s'ouvre et révèle son contenu caché!\n")
+                print("💡 DÉCOUVERTE MAJEURE:")
+                print("   Des documents secrets de Durand prouvant sa culpabilité!\n")
+                print("   Indice crucial: Durand est bien le coupable!\n")
+            else:
+                print("\nLe coffre est déjà ouvert.\n")
+            return True
+        
+        # Use chest with key (reverse order)
+        elif item1 == "coffre" and item2 == "clé":
+            if "clé_utilisée" not in game.flags:
+                game.flags.add("clé_utilisée")
+                print("\n🔑 Vous utilisez la clé sur le coffre.")
+                print("Le coffre s'ouvre et révèle son contenu caché!\n")
+                print("💡 DÉCOUVERTE MAJEURE:")
+                print("   Des documents secrets de Durand prouvant sa culpabilité!\n")
+                print("   Indice crucial: Durand est bien le coupable!\n")
+            else:
+                print("\nLe coffre est déjà ouvert.\n")
+            return True
+        
+        else:
+            print(f"\nVous ne pouvez pas utiliser '{item1}' sur '{item2}'.\n")
+            return False
+
     def accuse(game, list_of_words, number_of_parameters):
         """
         Allow the player to accuse a character of the crime.
@@ -472,9 +615,9 @@ class Actions:
             print("\nVous devez aller au labo du commissariat pour analyser les objets.\n")
             return False
         
-        # Check if the Scientifique is in the room
-        if "Scientifique" not in room.characters:
-            print("\nLe scientifique n'est pas ici.\n")
+        # Check if the Chimiste is in the room
+        if "Chimiste" not in room.characters:
+            print("\nLe chimiste n'est pas ici.\n")
             return False
         
         # Check if the item is in player's inventory

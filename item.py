@@ -7,7 +7,7 @@ class Item:
     Attributes:
         name (str): The name of the object
         description (str): The description of the object
-        weight (int): The weight of the object in kg
+        weight (int): The weight of the object
     """
     
     def __init__(self, name, description, weight):
@@ -17,7 +17,7 @@ class Item:
         Parameters:
             name (str): The name of the object
             description (str): The description of the object
-            weight (int): The weight of the object in kg
+            weight (int): The weight of the object
         """
         self.name = name
         self.description = description
@@ -31,8 +31,8 @@ class Item:
             str: A formatted string with the name, description, and weight
             
         Example:
-            sword : a sword with a razor-sharp edge (2 kg)
+            sword : a sword with a razor-sharp edge
         """
         if self.weight == 0:
             return f"{self.name} : {self.description}"
-        return f"{self.name} : {self.description} ({self.weight} kg)"
+        return f"{self.name} : {self.description}"
