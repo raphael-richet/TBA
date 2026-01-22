@@ -37,3 +37,7 @@ class Room:
             result += f"    - {item}\n"
         result += "\n"
         return result
+
+
+
+
