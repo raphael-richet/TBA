@@ -152,7 +152,6 @@ class Game:
                       "Inspecter toutes les pièces de la maison du crime (Grenier, Maison, Sous-Sol, Jardin) et trouvez des indices",
                       ["Visiter le Grenier", "Visiter le Sous-Sol (Cave)", "Visiter le Jardin", "Récupérer les indices"],
                       "Nouvelles pistes découvertes")
-        quest1.activate()
         self.quest_manager.add_quest(quest1)
 
         quest2 = Quest("Faire analyser les objets au Labo",
@@ -209,6 +208,9 @@ class Game:
                        ["Trouver la lettre", "Récupérer la lettre", "Lire la lettre"],
                        "Révélations de la lettre")
         self.quest_manager.add_quest(quest10)
+
+        # Activate the first quest
+        self.quest_manager.activate_quest("Inspecter la maison du crime")
 
         # Add objects to rooms (conforming to descriptions)
         couteau = Item("couteau", "un couteau ensanglanté", 0.5)

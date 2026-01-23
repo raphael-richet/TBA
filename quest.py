@@ -44,6 +44,7 @@ class Quest:
         self.is_completed = False
         self.is_active = False
         self.reward = reward
+        self.quest_manager = None  # Will be set by QuestManager
 
 
     def activate(self):
@@ -57,8 +58,8 @@ class Quest:
         False
         >>> quest.activate()
         <BLANKLINE>
-        🗡️  Nouvelle quête activée: Adventure
-        📝 Go on an adventure
+        Nouvelle quête activée: Adventure
+        Go on an adventure
         <BLANKLINE>
         >>> quest.is_active
         True
@@ -94,7 +95,7 @@ class Quest:
         """
         if objective in self.objectives and objective not in self.completed_objectives:
             self.completed_objectives.append(objective)
-            print(f"[OK] Objectif accompli: {objective}")
+            print(f"Objectif accompli: {objective}")
 
             # Check if all objectives are completed
             if len(self.completed_objectives) == len(self.objectives):
@@ -126,12 +127,12 @@ class Quest:
         if not self.is_completed:
             self.is_completed = True
             print(f"\n\033[92m{'='*60}")
-            print(f"✅ Quête terminée: {self.title}")
+            print(f"Quête terminée: {self.title}")
             print(f"{'='*60}\033[0m")
             
             # Display reward/clue message
             if self.reward:
-                print(f"\n💡 INDICE REÇU: {self.reward}\n")
+                print(f"\nINDICE REÇU: {self.reward}\n")
             
             # Display specific messages based on quest title
             if self.title == "Résoudre l'énigme":
@@ -143,6 +144,40 @@ class Quest:
             else:
                 print("Excellent, votre enquête avance ! Continuez !")
             print()
+            
+            # Activate the next chronological quest
+            self._activate_next_quest()
+
+    def _activate_next_quest(self):
+        """
+        Automatically activate the next chronological quest when this one is completed.
+        Only for quests 1-7. Quest 8 is not auto-activated.
+        """
+        if not self.quest_manager:
+            return
+        
+        chronological_quests = [
+            "Inspecter la maison du crime",
+            "Faire analyser les objets au Labo",
+            "Aller à la morgue",
+            "Explorer les environs",
+            "Inspecter chez Mme Lenoir",
+            "Analyser les objets chez Lenoir",
+            "Inspecter chez Durand",
+            "Résoudre l'énigme"
+        ]
+        
+        # Find the index of the current quest
+        try:
+            current_index = chronological_quests.index(self.title)
+        except ValueError:
+            # Quest is not in the chronological list (optional quests)
+            return
+        
+        # Activate the next quest if it exists and is not the last one
+        if current_index < len(chronological_quests) - 1:
+            next_quest_title = chronological_quests[current_index + 1]
+            self.quest_manager.activate_quest(next_quest_title)
 
 
     def get_status(self):
@@ -173,10 +208,10 @@ class Quest:
         if not self.is_active:
             return f"❓ {self.title} (Non activée)"
         if self.is_completed:
-            return f"[OK] {self.title} (Terminée)"
+            return f"✓ {self.title} (Terminée)"
         completed_count = len(self.completed_objectives)
         total_count = len(self.objectives)
-        return f"⏳ {self.title} ({completed_count}/{total_count} objectifs)"
+        return f"→ {self.title} ({completed_count}/{total_count} objectifs)"
 
 
     def get_details(self, current_counts=None):
@@ -436,6 +471,7 @@ class QuestManager:
         >>> manager.quests[0].title
         'Quest 1'
         """
+        quest.quest_manager = self
         self.quests.append(quest)
 
 

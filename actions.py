@@ -580,6 +580,18 @@ class Actions:
         if accused_name.lower() == "durand":
             print(f"\nVous avez accusé {accused_name}.")
             print("Le policier l'arrête immédiatement.\n")
+            
+            # Complete quest 8 and display the victory message
+            quest8 = game.quest_manager.get_quest_by_title("Résoudre l'énigme")
+            if quest8:
+                quest8.complete_objective("Accuser le coupable", player)
+            
+            print("="*60)
+            print("BRAVO VOUS AVEZ RÉSOLU L'AFFAIRE")
+            print("VOUS ÊTES UN GRAND DÉTECTIVE !")
+            print("="*60)
+            print("\nLe coupable a été arrêté. L'enquête est terminée !\n")
+            game.finished = True
         else:
             print(f"\nVous avez accusé {accused_name}.")
             print("Le policier vous regarde avec incrédulité.")
@@ -633,8 +645,18 @@ class Actions:
         # Mark the item as analyzed
         if item_name not in game.analyzed_items:
             game.analyzed_items.add(item_name)
-            print(f"\n✓ Vous avez analysé: {item_name}")
+            print(f"\nVous avez analysé: {item_name}")
             print(f"Objets analysés: {len(game.analyzed_items)}/{len(game.required_items)}\n")
+            
+            # Check if all crime scene objects have been analyzed
+            crime_scene_items = {"couteau", "arme", "photos", "coffre"}
+            analyzed_crime_scene_items = crime_scene_items & game.analyzed_items
+            
+            if analyzed_crime_scene_items == crime_scene_items:
+                # All 4 crime scene items have been analyzed, complete quest 2
+                quest2 = game.quest_manager.get_quest_by_title("Faire analyser les objets au Labo")
+                if quest2 and quest2.is_active:
+                    quest2.complete_objective("Faire analyser chaque objet", player)
         else:
             print(f"\nCet objet a déjà été analysé.\n")
         
